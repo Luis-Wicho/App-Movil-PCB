@@ -67,7 +67,7 @@ export default function LoginScreen() {
                 onPress={() => {
                   console.log('Login con:', username, password);
                   // Aquí iría tu lógica de autenticación
-                  router.replace("/(tabs)"); // Redirige al inicio de la app tras logear
+                  router.replace("/(tabs)/menu"); // Redirige al inicio de la app tras logear
                 }}
               >
                 <ThemedText style={styles.buttonText}>Entrar</ThemedText>

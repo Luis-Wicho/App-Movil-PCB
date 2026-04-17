@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient'; // Importación necesaria
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
@@ -11,49 +11,45 @@ export default function LoginScreen() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      {/* Aplicamos el Gradiente como fondo principal */}
       <LinearGradient
-        // Colores: Blanco puro a un Teal muy suave (#E0F2F1)
-        colors={['#878787', '#ffffff']}
+        colors={['#2980B9', '#FFFFFF']} // Azul institucional y blanco [cite: 17, 19]
         style={styles.gradientBackground}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           
-          {/* Sección del Logo e Identidad */}
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('@/assets/images/logo2.png')} 
-              style={styles.mainLogo}
-            />
+          {/* Tarjeta Blanca con Sombreado */}
+          <View style={styles.loginCard}>
             
-            <ThemedText style={styles.titlePrimary}>PROTECCIÓN CIVIL</ThemedText>
-            <ThemedText style={styles.titleSecondary}>Y BOMBEROS</ThemedText>
-            <ThemedText style={styles.locationText}>IZÚCAR DE MATAMOROS, PUE.</ThemedText>
+            {/* Sección del Logo */}
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('@/assets/images/logo2.png')} 
+                style={styles.mainLogo}
+              />
+              <ThemedText style={styles.titlePrimary}>PROTECCIÓN CIVIL</ThemedText>
+              <ThemedText style={styles.titleSecondary}>Y BOMBEROS</ThemedText>
+              <ThemedText style={styles.locationText}>IZÚCAR DE MATAMOROS, PUE.</ThemedText>
+            </View>
+
+            {/* Sección de Botones */}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                style={styles.primaryButton}
+                onPress={() => {}}
+              >
+                <ThemedText style={styles.buttonText}>Iniciar Sesión</ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.secondaryButton}
+                onPress={() => {}}
+              >
+                <ThemedText style={styles.secondaryButtonText}>Crear Cuenta</ThemedText>
+              </TouchableOpacity>
+
+            </View>
+
           </View>
-
-          {/* Sección de Acciones */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={styles.primaryButton}
-              //onPress={() => router.push("/users/start")}
-            >
-              <ThemedText style={styles.buttonText}>Iniciar Sesión</ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.secondaryButton}
-              //onPress={() => router.push("/users/register")}
-            >
-              <ThemedText style={styles.secondaryButtonText}>Crear Cuenta</ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => alert('Soporte técnico')}>
-              <ThemedText style={styles.helpText}>
-                ¿Necesitas ayuda con tu acceso?
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
-
         </ScrollView>
       </LinearGradient>
     </ThemedView>
@@ -67,78 +63,76 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
+    padding: 20,
+  },
+  // Contenedor de la Tarjeta Blanca
+  loginCard: {
+    backgroundColor: '#FFFFFF', // Blanco [cite: 23, 30]
+    borderRadius: 25,
+    padding: 30,
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
+    // Sombreado para iOS y Android
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 12,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 50,
+    marginBottom: 40,
   },
   mainLogo: {
-    width: 170, // Un poco más grande para que luzca
-    height: 170,
-    marginBottom: 20,
+    width: 140,
+    height: 140,
+    marginBottom: 15,
   },
   titlePrimary: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#1E838F',
-    letterSpacing: 1,
+    color: '#212121', // Dark Charcoal [cite: 33]
     textAlign: 'center',
   },
   titleSecondary: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#E8702D',
-    marginTop: -2,
+    color: '#d33922', // Dorado institucional [cite: 24, 31]
     textAlign: 'center',
   },
   locationText: {
-    fontSize: 15,
-    color: '#1D1D1B',
-    opacity: 0.7,
-    marginTop: 10,
+    fontSize: 13,
+    color: '#4F4F4F', // Dark Gray [cite: 35]
+    marginTop: 8,
     textAlign: 'center',
   },
   buttonContainer: {
     width: '100%',
-    gap: 16,
-    maxWidth: 400,
-    alignSelf: 'center',
+    gap: 14,
   },
   primaryButton: {
-    backgroundColor: '#1E838F',
-    paddingVertical: 16,
-    borderRadius: 16,
+    backgroundColor: '#377123', // Azul principal [cite: 17, 27]
+    paddingVertical: 15,
+    borderRadius: 12,
     alignItems: 'center',
-    // Sombra para que resalte sobre el gradiente
-    shadowColor: '#1E838F',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    color: '#FFFFFF', // Blanco [cite: 34]
+    fontSize: 16,
     fontWeight: 'bold',
   },
   secondaryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.6)', // Fondo semi-transparente
-    paddingVertical: 16,
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 15,
+    borderRadius: 12,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#1E838F',
+    borderColor: '#172e9d', // Naranja [cite: 16, 27]
   },
   secondaryButtonText: {
-    color: '#1E838F',
-    fontSize: 18,
+    color: '#100f0f',
+    fontSize: 16,
     fontWeight: '600',
-  },
-  helpText: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#546e7a',
-    marginTop: 15,
   },
 });

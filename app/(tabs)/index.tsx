@@ -35,14 +35,14 @@ export default function LoginScreen() {
             <View style={styles.buttonContainer}>
               <TouchableOpacity 
                 style={styles.primaryButton}
-                onPress={() => {}}
+                onPress={() => {router.push('/logeo')}}
               >
                 <ThemedText style={styles.buttonText}>Iniciar Sesión</ThemedText>
               </TouchableOpacity>
 
               <TouchableOpacity 
                 style={styles.secondaryButton}
-                onPress={() => {}}
+                onPress={() => {router.push('/(tabs)/explore')}}
               >
                 <ThemedText style={styles.secondaryButtonText}>Crear Cuenta</ThemedText>
               </TouchableOpacity>

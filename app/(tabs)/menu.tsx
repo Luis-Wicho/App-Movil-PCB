@@ -1,52 +1,79 @@
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Ionicons } from '@expo/vector-icons'; // Iconos estándar de Expo
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image'; // Importación para el logo
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Dimensions, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const COLUMN_WIDTH = (width - 60) / 2; // Cálculo para 2 columnas con padding
+const COLUMN_WIDTH = (width - 50) / 2; // Ajuste de espacio entre columnas
 
 export default function MainMenuScreen() {
   const menuItems = [
-    { id: 1, title: 'Establecimientos', icon: 'business', color: '#2980B9' },
-    { id: 2, title: 'Tarifas', icon: 'cash', color: '#93730B' },
-    { id: 3, title: 'Estatus', icon: 'stats-chart', color: '#FF6600' },
-    { id: 4, title: 'Mi Perfil', icon: 'person', color: '#2C3E50' },
+    { id: 1, title: 'Establecimientos', icon: 'business', color: '#2980B9', sub: 'Gestionar registros' },
+    { id: 2, title: 'Tarifas', icon: 'cash', color: '#93730B', sub: 'Consultar costos' },
+    { id: 3, title: 'Estatus', icon: 'shield-checkmark', color: '#FF6600', sub: 'Verificar trámites' },
+    { id: 4, title: 'Mi Perfil', icon: 'person', color: '#2C3E50', sub: 'Configuración' },
   ];
 
   return (
-    <ThemedView style={{ flex: 1 }}>
-      <LinearGradient colors={['#2980B9', '#FFFFFF']} style={styles.headerGradient}>
-        <View style={styles.headerContent}>
-          <ThemedText style={styles.welcomeText}>Panel de Control</ThemedText>
-          <ThemedText style={styles.subText}>PCyB Izúcar de Matamoros</ThemedText>
+    <ThemedView style={{ flex: 1, backgroundColor: '#F8F9FA' }}>
+      {/* Header con Logo y Gradiente */}
+      <LinearGradient 
+        colors={['#2980B9', '#1A5276']} 
+        style={styles.headerGradient}
+      >
+        <View style={styles.headerTop}>
+          <Image
+            source={require('@/assets/images/logo2.png')} 
+            style={styles.logo}
+            contentFit="contain"
+          />
+          <View style={styles.headerTextContainer}>
+            <ThemedText style={styles.welcomeText}>Panel Principal</ThemedText>
+            <ThemedText style={styles.subText}>PCyB Izúcar de Matamoros</ThemedText>
+          </View>
         </View>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Tarjeta contenedora de botones */}
+      <ScrollView 
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <ThemedText style={styles.sectionTitle}>Servicios Disponibles</ThemedText>
+        
+        {/* Cuadrícula de Menú */}
         <View style={styles.menuGrid}>
           {menuItems.map((item) => (
             <TouchableOpacity 
               key={item.id} 
               style={styles.card}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
+              {/* Círculo de fondo suave para el icono */}
               <View style={[styles.iconCircle, { backgroundColor: item.color + '15' }]}>
-                <Ionicons name={item.icon} size={32} color={item.color} />
+                <Ionicons name={item.icon as any} size={30} color={item.color} />
               </View>
-              <ThemedText style={styles.cardTitle}>{item.title}</ThemedText>
-              <ThemedText style={styles.cardSub}>Visualización</ThemedText>
+              
+              <View style={styles.cardInfo}>
+                <ThemedText style={styles.cardTitle}>{item.title}</ThemedText>
+                <ThemedText style={styles.cardSubText}>{item.sub}</ThemedText>
+              </View>
+              
+              {/* Indicador visual pequeño */}
+              <View style={[styles.indicator, { backgroundColor: item.color }]} />
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Botón de Ayuda o Soporte al final */}
-        <TouchableOpacity style={styles.supportButton}>
-          <Ionicons name="help-circle-outline" size={20} color="#93730B" />
-          <ThemedText style={styles.supportText}>¿Necesitas asistencia técnica?</ThemedText>
+        {/* Soporte Técnico */}
+        <TouchableOpacity style={styles.supportCard}>
+          <View style={styles.supportContent}>
+            <Ionicons name="help-circle" size={24} color="#93730B" />
+            <ThemedText style={styles.supportText}>¿Necesitas asistencia técnica?</ThemedText>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#93730B" />
         </TouchableOpacity>
       </ScrollView>
     </ThemedView>
@@ -55,27 +82,50 @@ export default function MainMenuScreen() {
 
 const styles = StyleSheet.create({
   headerGradient: {
-    height: 180,
-    justifyContent: 'center',
-    paddingHorizontal: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
   },
-  headerContent: {
-    marginTop: 40,
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logo: {
+    width: 70,
+    height: 70,
+    marginRight: 15,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 15,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   welcomeText: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
   subText: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
   },
   container: {
     padding: 20,
-    paddingTop: 30,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 20,
+    marginLeft: 5,
   },
   menuGrid: {
     flexDirection: 'row',
@@ -85,50 +135,67 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
     width: COLUMN_WIDTH,
-    height: 160,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 20,
     marginBottom: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // Sombras
+    alignItems: 'flex-start', // Alineación a la izquierda para un look más moderno
+    position: 'relative',
+    overflow: 'hidden',
+    // Sombras sutiles
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
   },
   iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 54,
+    height: 54,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 15,
+  },
+  cardInfo: {
+    width: '100%',
   },
   cardTitle: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#212121',
-    textAlign: 'center',
+    fontWeight: '800',
+    color: '#1A1A1A',
   },
-  cardSub: {
+  cardSubText: {
     fontSize: 12,
-    color: '#757575',
+    color: '#7F8C8D',
     marginTop: 4,
   },
-  supportButton: {
+  indicator: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  supportCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FEF9E7',
+    padding: 18,
+    borderRadius: 20,
     marginTop: 10,
-    padding: 10,
+    borderWidth: 1,
+    borderColor: '#F9E79F',
+  },
+  supportContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   supportText: {
     fontSize: 14,
     color: '#93730B',
-    marginLeft: 8,
-    fontWeight: '500',
-    textDecorationLine: 'underline',
+    marginLeft: 10,
+    fontWeight: '600',
   },
 });

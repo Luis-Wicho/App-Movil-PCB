@@ -1,5 +1,5 @@
-import { Tariff } from "../../domain/entities/Tariff";
-import { TariffRepository } from "../../domain/repositories/TariffRepository";
+import { Tariff } from "../domain/Tariff";
+import { TariffRepository } from "../domain/TariffRepository";
 
 export class TariffApi implements TariffRepository {
   async getAll(): Promise<Tariff[]> {

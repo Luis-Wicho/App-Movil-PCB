@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FlatList, Text, View } from "react-native";
-import { getTariffs } from "../../application/useCases/getTariffs";
-import { TariffApi } from "../../infrastructure/api/TariffApi";
+import { getTariffs } from "../application/getTariffs";
+import { TariffApi } from "../intraestructure/TariffApi";
 
 export default function TariffScreen() {
   const [tariffs, setTariffs] = useState([]);

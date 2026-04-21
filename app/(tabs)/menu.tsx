@@ -5,7 +5,6 @@ import { Image } from 'expo-image'; // Importación para el logo
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Dimensions, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - 50) / 2; // Ajuste de espacio entre columnas
 
@@ -50,8 +49,7 @@ export default function MainMenuScreen() {
               key={item.id} 
               style={styles.card}
               activeOpacity={0.8}
-              
-            >
+              >
               {/* Círculo de fondo suave para el icono */}
               <View style={[styles.iconCircle, { backgroundColor: item.color + '15' }]}>
                 <Ionicons name={item.icon as any} size={30} color={item.color} />

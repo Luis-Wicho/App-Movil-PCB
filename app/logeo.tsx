@@ -67,7 +67,7 @@ export default function LoginScreen() {
                 onPress={() => {
                   console.log('Login con:', username, password);
                   // Aquí iría tu lógica de autenticación
-                  router.replace("/(tabs)/menu"); // Redirige al inicio de la app tras logear
+                  router.replace("/menu"); // Redirige al inicio de la app tras logear
                 }}
               >
                 <ThemedText style={styles.buttonText}>Entrar</ThemedText>
@@ -79,7 +79,7 @@ export default function LoginScreen() {
             </View>
 
             {/* Enlace para ir a registro si no tiene cuenta */}
-            <TouchableOpacity onPress={() => router.push("/(tabs)/explore")} style={styles.registerLink}>
+            <TouchableOpacity onPress={() => router.push("/explore")} style={styles.registerLink}>
               <ThemedText style={styles.backText}>
                 ¿No tienes cuenta? <ThemedText style={styles.backTextBold}>Regístrate</ThemedText>
               </ThemedText>

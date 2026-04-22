@@ -42,7 +42,7 @@ export default function LoginScreen() {
 
               <TouchableOpacity 
                 style={styles.secondaryButton}
-                onPress={() => {router.push('/(tabs)/explore')}}
+                onPress={() => {router.push('/explore')}}
               >
                 <ThemedText style={styles.secondaryButtonText}>Crear Cuenta</ThemedText>
               </TouchableOpacity>

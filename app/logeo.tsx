@@ -2,16 +2,45 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { supabase } from '@/lib/supabase'; // Importamos tu puente a Supabase
 
 export default function LoginScreen() {
   const router = useRouter();
-  
+  const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
+  async function handleLogin() {
+    if (!username || !password) {
+      Alert.alert("Atención", "Por favor ingresa tu usuario y contraseña.");
+      return;
+    }
+
+    setLoading(true);
+
+    // Reconstruimos el correo ficticio: usuario + dominio de la app
+    const fakeEmail = `${username.toLowerCase().trim()}@pcyb-izucar.com`;
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: fakeEmail,
+      password: password,
+    });
+
+    if (error) {
+      // Si hay error (usuario no existe o contraseña mal)
+      Alert.alert("Error de acceso", "El usuario o la contraseña son incorrectos.");
+      setLoading(false);
+      return;
+    }
+
+    // Login exitoso
+    router.replace("/menu");
+    setLoading(false);
+  }
 
   return (
     <ThemedView style={{ flex: 1 }}>
@@ -28,9 +57,7 @@ export default function LoginScreen() {
             showsVerticalScrollIndicator={false}
           >
             
-            {/* Tarjeta de Inicio de Sesión */}
             <View style={styles.card}>
-              
               <View style={styles.cardHeader}>
                 <Image
                   source={require('@/assets/images/logo2.png')} 
@@ -47,6 +74,7 @@ export default function LoginScreen() {
                   placeholder="Tu usuario"
                   placeholderTextColor="#94a3b8"
                   autoCapitalize="none"
+                  value={username}
                   onChangeText={setUsername}
                 />
               </View>
@@ -58,27 +86,28 @@ export default function LoginScreen() {
                   placeholder="••••••••"
                   placeholderTextColor="#94a3b8"
                   secureTextEntry
+                  value={password}
                   onChangeText={setPassword}
                 />
               </View>
 
               <TouchableOpacity 
-                style={styles.loginButton}
-                onPress={() => {
-                  console.log('Login con:', username, password);
-                  // Aquí iría tu lógica de autenticación
-                  router.replace("/menu"); // Redirige al inicio de la app tras logear
-                }}
+                style={[styles.loginButton, loading && { opacity: 0.7 }]}
+                onPress={handleLogin}
+                disabled={loading}
               >
-                <ThemedText style={styles.buttonText}>Entrar</ThemedText>
+                {loading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <ThemedText style={styles.buttonText}>Entrar</ThemedText>
+                )}
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => alert('Recuperar contraseña')} style={{ marginTop: 15 }}>
+              <TouchableOpacity onPress={() => Alert.alert('Aviso', 'Contacta al administrador para restablecer tu contraseña.')} style={{ marginTop: 15 }}>
                 <ThemedText style={styles.forgotText}>¿Olvidaste tu contraseña?</ThemedText>
               </TouchableOpacity>
             </View>
 
-            {/* Enlace para ir a registro si no tiene cuenta */}
             <TouchableOpacity onPress={() => router.push("/explore")} style={styles.registerLink}>
               <ThemedText style={styles.backText}>
                 ¿No tienes cuenta? <ThemedText style={styles.backTextBold}>Regístrate</ThemedText>
@@ -103,10 +132,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 30,
     padding: 28,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.15,
-    shadowRadius: 25,
     elevation: 12,
   },
   cardHeader: {
@@ -126,6 +151,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
+    color: '#1e293b'
   },
   loginButton: {
     backgroundColor: '#1E838F',

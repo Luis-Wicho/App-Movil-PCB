@@ -61,7 +61,12 @@ export default function EstablishmentsScreen() {
   };
 
   const renderItem = ({ item }: { item: Establecimiento }) => (
-    <View style={styles.card}>
+    <TouchableOpacity 
+      style={styles.card} 
+      activeOpacity={0.7}
+      // Al presionar, navegamos a la ruta dinámica usando el id
+      onPress={() => router.push({ pathname: '/Establishments/[id]', params: { id: item.id_establecimiento } } as any)}
+    >
       <View style={styles.cardInfo}>
         <ThemedText type="defaultSemiBold" style={styles.title}>
           {item.nombre_establecimiento}
@@ -90,7 +95,10 @@ export default function EstablishmentsScreen() {
           {item.estatus || 'Pendiente'}
         </ThemedText>
       </View>
-    </View>
+      
+      {/* Icono de flecha para indicar que es clickeable */}
+      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" style={{ marginLeft: 8 }} />
+    </TouchableOpacity>
   );
 
   return (

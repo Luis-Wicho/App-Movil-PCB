@@ -23,6 +23,7 @@ export default function RegisterScreen() {
   async function handleRegister() {
     const { username, firstName, lastName, password, confirmPassword } = formData;
 
+    // 1. Validaciones básicas
     if (!username || !firstName || !lastName || !password) {
       Alert.alert("Campos vacíos", "Por favor rellena todos los datos.");
       return;
@@ -33,13 +34,28 @@ export default function RegisterScreen() {
       return;
     }
 
+    // Validación extra: Que el usuario no tenga espacios (para evitar errores de formato de email)
+    if (username.includes(' ')) {
+      Alert.alert("Nombre de usuario", "El nombre de usuario no puede contener espacios.");
+      return;
+    }
+
     setLoading(true);
 
+    // 2. Crear el correo sintético basado en el username
+    // Esto es lo que Supabase verá, pero el usuario no lo sabe.
     const fakeEmail = `${username.toLowerCase().trim()}@pcyb-izucar.com`;
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: fakeEmail,
       password: password,
+      options: {
+        data: {
+          username: username,
+          first_name: firstName,
+          last_name: lastName,
+        }
+      }
     });
 
     if (authError) {
@@ -49,6 +65,7 @@ export default function RegisterScreen() {
     }
 
     if (authData.user) {
+      // 3. Insertar en tu tabla personalizada de 'perfiles'
       const { error: profileError } = await supabase
         .from('perfiles')
         .insert([
@@ -61,10 +78,10 @@ export default function RegisterScreen() {
         ]);
 
       if (profileError) {
-        Alert.alert("Error de Perfil", "Error al guardar nombres: " + profileError.message);
+        Alert.alert("Error de Perfil", "Cuenta creada, pero hubo un error al guardar nombres: " + profileError.message);
       } else {
         Alert.alert("¡Bienvenido!", "Cuenta creada exitosamente.");
-        router.replace('/menu');
+        router.replace('/menu'); // O la ruta que prefieras
       }
     }
     setLoading(false);
@@ -89,6 +106,7 @@ export default function RegisterScreen() {
                   placeholder="Ej. luis_izucar"
                   placeholderTextColor="#94a3b8"
                   autoCapitalize="none"
+                  autoCorrect={false}
                   onChangeText={(text) => setFormData({...formData, username: text})}
                 />
               </View>
@@ -97,7 +115,7 @@ export default function RegisterScreen() {
                 <ThemedText style={styles.label}>Nombres</ThemedText>
                 <TextInput
                   style={styles.input}
-                  placeholder="Tus nombres"
+                  placeholder="luis"
                   placeholderTextColor="#94a3b8"
                   onChangeText={(text) => setFormData({...formData, firstName: text})}
                 />
@@ -107,7 +125,7 @@ export default function RegisterScreen() {
                 <ThemedText style={styles.label}>Apellidos</ThemedText>
                 <TextInput
                   style={styles.input}
-                  placeholder="Tus apellidos"
+                  placeholder="Pérez"
                   placeholderTextColor="#94a3b8"
                   onChangeText={(text) => setFormData({...formData, lastName: text})}
                 />

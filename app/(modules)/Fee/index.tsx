@@ -7,13 +7,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { supabase } from '@/lib/supabase';
 
-// 1. Definimos la interfaz con las columnas reales que encontramos
+// Definimos la estructura de los datos que vienen de la base de datos
 interface OrdenPago {
   id_pago: string;
   id_establecimiento: string;
   monto: number;
   fecha_emision: string;
-  nombre_establecimiento?: string; // Para el join
+  nombre_establecimiento?: string; 
 }
 
 export default function FeeScreen() {
@@ -21,11 +21,12 @@ export default function FeeScreen() {
   const [loading, setLoading] = useState(true);
   const [pagos, setPagos] = useState<OrdenPago[]>([]);
 
+  // Función para obtener los datos de Supabase
   const fetchPagos = async () => {
     try {
       setLoading(true);
       
-      // Realizamos la consulta con el JOIN para traer el nombre del negocio
+      // Consulta con JOIN para traer el nombre del negocio desde la tabla establecimientos
       const { data, error } = await supabase
         .from('ordenes_pago') 
         .select(`
@@ -39,7 +40,7 @@ export default function FeeScreen() {
 
       if (error) throw error;
 
-      // Formateamos para que el nombre sea fácil de acceder
+      // Mapeamos los datos para que el nombre del establecimiento sea fácil de leer
       const formatted = data.map((p: any) => ({
         ...p,
         nombre_establecimiento: p.establecimientos?.nombre_establecimiento || 'Negocio no identificado'
@@ -47,17 +48,19 @@ export default function FeeScreen() {
 
       setPagos(formatted);
     } catch (error: any) {
-      console.error(error);
-      Alert.alert('Error', 'No se pudieron cargar los pagos.');
+      console.error("Error en Supabase:", error.message);
+      Alert.alert('Error', 'No se pudieron cargar los registros de cobro.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Se ejecuta al abrir la pantalla
   useEffect(() => {
     fetchPagos();
   }, []);
 
+  // Cómo se ve cada tarjeta de pago en la lista
   const renderItem = ({ item }: { item: OrdenPago }) => (
     <View style={styles.card}>
       <View style={styles.cardInfo}>
@@ -65,47 +68,58 @@ export default function FeeScreen() {
           {item.nombre_establecimiento}
         </ThemedText>
         <ThemedText style={styles.dateText}>
-          Emitida: {new Date(item.fecha_emision).toLocaleDateString('es-MX')}
+          Emitida: {item.fecha_emision ? new Date(item.fecha_emision).toLocaleDateString('es-MX') : 'Sin fecha'}
         </ThemedText>
         <View style={styles.amountRow}>
           <ThemedText style={styles.currency}>$</ThemedText>
-          <ThemedText style={styles.amount}>{item.monto.toLocaleString()}</ThemedText>
+          <ThemedText style={styles.amount}>{(item.monto || 0).toLocaleString()}</ThemedText>
         </View>
       </View>
-      <Ionicons name="receipt-outline" size={24} color="#2E7D32" />
+      <View style={styles.iconCircle}>
+        <Ionicons name="receipt" size={24} color="#2E7D32" />
+      </View>
     </View>
   );
 
   return (
     <ThemedView style={styles.container}>
+      {/* Encabezado con botón de regreso */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-          <Ionicons name="arrow-back" size={24} color="#2E7D32" />
+          <Ionicons name="arrow-back" size={26} color="#2E7D32" />
         </TouchableOpacity>
-        <ThemedText type="title" style={styles.headerTitle}>Pagos Recaudados</ThemedText>
+        <ThemedText type="title" style={styles.headerTitle}>Tarifas y Pagos</ThemedText>
         <TouchableOpacity onPress={fetchPagos} style={styles.iconButton}>
-          <Ionicons name="refresh" size={24} color="#2E7D32" />
+          <Ionicons name="refresh" size={26} color="#2E7D32" />
         </TouchableOpacity>
       </View>
 
-      {/* Resumen para tu reporte financiero */}
+      {/* Tarjeta de Resumen Financiero */}
       <View style={styles.summaryCard}>
-        <ThemedText style={styles.summaryLabel}>Total en Caja</ThemedText>
+        <ThemedText style={styles.summaryLabel}>Total Recaudado (Caja)</ThemedText>
         <ThemedText style={styles.summaryTotal}>
-          ${pagos.reduce((acc, curr) => acc + curr.monto, 0).toLocaleString()}
+          ${pagos.reduce((acc, curr) => acc + (curr.monto || 0), 0).toLocaleString()}
         </ThemedText>
       </View>
 
+      {/* Listado o Cargando */}
       {loading ? (
-        <ActivityIndicator size="large" color="#2E7D32" style={{ marginTop: 20 }} />
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#2E7D32" />
+          <ThemedText style={styles.loadingText}>Cargando registros...</ThemedText>
+        </View>
       ) : (
         <FlatList
           data={pagos}
           keyExtractor={(item) => item.id_pago}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <ThemedText style={styles.emptyText}>No hay registros de pago aún.</ThemedText>
+            <View style={styles.centerContainer}>
+              <Ionicons name="alert-circle-outline" size={50} color="#94a3b8" />
+              <ThemedText style={styles.emptyText}>No hay órdenes de pago registradas.</ThemedText>
+            </View>
           }
         />
       )}
@@ -114,42 +128,64 @@ export default function FeeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, backgroundColor: '#F1F5F9' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 60,
     paddingBottom: 20,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    elevation: 3,
   },
-  headerTitle: { fontSize: 20, color: '#2E7D32' },
-  iconButton: { padding: 4 },
+  headerTitle: { fontSize: 22, color: '#2E7D32', fontWeight: 'bold' },
+  iconButton: { padding: 8 },
   summaryCard: {
-    margin: 16,
-    padding: 20,
+    margin: 20,
+    padding: 25,
     backgroundColor: '#2E7D32',
-    borderRadius: 20,
-    elevation: 4,
+    borderRadius: 25,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
-  summaryLabel: { color: '#E8F5E9', fontSize: 14 },
-  summaryTotal: { color: 'white', fontSize: 32, fontWeight: 'bold' },
-  listContent: { padding: 16 },
+  summaryLabel: { color: '#E8F5E9', fontSize: 14, opacity: 0.9 },
+  summaryTotal: { color: '#FFFFFF', fontSize: 34, fontWeight: 'bold', marginTop: 5 },
+  listContent: { paddingHorizontal: 20, paddingBottom: 40 },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 15,
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
   },
   cardInfo: { flex: 1 },
-  businessName: { fontSize: 15, color: '#1e293b' },
-  dateText: { fontSize: 12, color: '#64748b', marginTop: 2 },
-  amountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 8 },
-  currency: { fontSize: 14, color: '#2e7d32', fontWeight: 'bold' },
-  amount: { fontSize: 20, color: '#2e7d32', fontWeight: 'bold', marginLeft: 2 },
-  emptyText: { textAlign: 'center', marginTop: 40, color: '#64748b' }
+  businessName: { fontSize: 16, color: '#1e293b', marginBottom: 4 },
+  dateText: { fontSize: 13, color: '#64748b' },
+  amountRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 10 },
+  currency: { fontSize: 16, color: '#2E7D32', fontWeight: 'bold' },
+  amount: { fontSize: 22, color: '#2E7D32', fontWeight: 'bold', marginLeft: 3 },
+  iconCircle: {
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 50 },
+  loadingText: { marginTop: 10, color: '#64748b' },
+  emptyText: { textAlign: 'center', marginTop: 10, color: '#94a3b8', fontSize: 16 }
 });

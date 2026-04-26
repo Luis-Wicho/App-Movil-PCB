@@ -1,32 +1,79 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import React, { useEffect } from 'react';
+import { Platform } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-// 1. Eliminamos unstable_settings porque ya no usaremos (tabs)
+// Configuración corregida para evitar el error de TypeScript
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true, // Se mantiene por compatibilidad
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    // Añadimos estas dos para cumplir con el nuevo tipo 'NotificationBehavior'
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
+
+  async function registerForPushNotificationsAsync() {
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      
+      if (finalStatus !== 'granted') {
+        console.log('Fallo al obtener el token');
+        return;
+      }
+      
+      try {
+        const token = (await Notifications.getExpoPushTokenAsync()).data;
+        console.log("Token para REQM12:", token);
+      } catch (e) {
+        console.log("Error de token:", e);
+      }
+    }
+
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#1E838F',
+      });
+    }
+  }
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
-        {/* 2. Definimos las pantallas principales del flujo de Protección Civil */}
         <Stack.Screen name="index" /> 
         <Stack.Screen name="logeo" />
-        <Stack.Screen name="explore" /> 
         <Stack.Screen name="menu" />
-        
-        {/* El modal se queda igual por si lo necesitas después */}
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Aviso' }} />
+        <Stack.Screen name="(modules)/Fee/index" />
+        <Stack.Screen name="(modules)/notifications/index" />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
   );
 }
-
 
 /*import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';

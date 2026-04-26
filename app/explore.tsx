@@ -43,8 +43,8 @@ export default function RegisterScreen() {
     setLoading(true);
 
     // 2. Crear el correo sintético basado en el username
-    // Esto es lo que Supabase verá, pero el usuario no lo sabe.
-    const fakeEmail = `${username.toLowerCase().trim()}@pcyb-izucar.com`;
+    // CAMBIA EL DOMINIO AQUÍ:
+    const fakeEmail = `${username.toLowerCase().trim()}@gmail.com`; 
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: fakeEmail,

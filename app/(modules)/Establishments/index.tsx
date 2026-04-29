@@ -27,14 +27,15 @@ export default function EstablishmentsScreen() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('establecimientos') 
+        .from('establecimientos')
         .select('*')
         .order('nombre_establecimiento', { ascending: true });
 
       if (error) throw error;
       setEstablecimientos(data || []);
-      setFilteredData(data || []); // Inicializamos los datos filtrados
+      setFilteredData(data || []);
     } catch (error: any) {
+      console.error("Error Supabase:", error.message);
       Alert.alert('Error', 'No se pudo conectar con la base de datos');
     } finally {
       setLoading(false);
@@ -45,14 +46,13 @@ export default function EstablishmentsScreen() {
     fetchEstablecimientos();
   }, []);
 
-  // Función de búsqueda en tiempo real
   const handleSearch = (text: string) => {
     setSearch(text);
-    if (text) {
+    const query = text.toUpperCase().trim();
+    if (query) {
       const newData = establecimientos.filter((item) => {
         const itemData = `${item.nombre_establecimiento} ${item.no_expediente}`.toUpperCase();
-        const textData = text.toUpperCase();
-        return itemData.indexOf(textData) > -1;
+        return itemData.includes(query);
       });
       setFilteredData(newData);
     } else {
@@ -61,43 +61,51 @@ export default function EstablishmentsScreen() {
   };
 
   const renderItem = ({ item }: { item: Establecimiento }) => (
-    <TouchableOpacity 
-      style={styles.card} 
-      activeOpacity={0.7}
-      // Al presionar, navegamos a la ruta dinámica usando el id
-      onPress={() => router.push({ pathname: '/Establishments/[id]', params: { id: item.id_establecimiento } } as any)}
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.8}
+      onPress={() => router.push(`/(modules)/Establishments/${item.id_establecimiento}`)}
     >
-      <View style={styles.cardInfo}>
-        <ThemedText type="defaultSemiBold" style={styles.title}>
+      {/* 1. SECCIÓN DE TEXTO (IZQUIERDA) */}
+      <View style={styles.textContainer}>
+        <ThemedText style={styles.title} numberOfLines={2}>
           {item.nombre_establecimiento}
         </ThemedText>
-        <ThemedText style={styles.subtitle}>{item.giro_comercial}</ThemedText>
         
-        <View style={styles.infoRow}>
-          <Ionicons name="document-text-outline" size={14} color="#1E838F" />
-          <ThemedText style={styles.details}>Expediente: {item.no_expediente}</ThemedText>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Ionicons name="location-outline" size={14} color="#64748b" />
-          <ThemedText style={styles.details}>{item.direccion}</ThemedText>
-        </View>
-      </View>
-
-      <View style={[
-        styles.statusBadge, 
-        { backgroundColor: item.estatus === 'Activo' ? '#dcfce7' : '#fee2e2' }
-      ]}>
-        <ThemedText style={[
-          styles.statusText, 
-          { color: item.estatus === 'Activo' ? '#166534' : '#991b1b' }
-        ]}>
-          {item.estatus || 'Pendiente'}
+        <ThemedText style={styles.giroText} numberOfLines={1}>
+          {item.giro_comercial || 'GIRO NO ESPECIFICADO'}
         </ThemedText>
+
+        <View style={styles.metaRow}>
+          <Ionicons name="document-text" size={14} color="#1E838F" />
+          <ThemedText style={styles.metaText}>Exp: {item.no_expediente}</ThemedText>
+        </View>
+
+        <View style={styles.metaRow}>
+          <Ionicons name="location" size={14} color="#94a3b8" />
+          <ThemedText style={styles.metaText} numberOfLines={1}>
+            {item.direccion || 'Sin dirección'}
+          </ThemedText>
+        </View>
       </View>
-      
-      {/* Icono de flecha para indicar que es clickeable */}
-      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" style={{ marginLeft: 8 }} />
+
+      {/* 2. SECCIÓN DE ESTATUS (DERECHA) */}
+      <View style={styles.sideContainer}>
+        <View style={[
+          styles.badge, 
+          { backgroundColor: item.estatus?.toLowerCase().includes('invitacion') ? '#ffedd5' : 
+                            item.estatus === 'Activo' ? '#dcfce7' : '#fee2e2' }
+        ]}>
+          <ThemedText style={[
+            styles.badgeText,
+            { color: item.estatus?.toLowerCase().includes('invitacion') ? '#9a3412' : 
+                     item.estatus === 'Activo' ? '#166534' : '#991b1b' }
+          ]} numberOfLines={2}>
+            {item.estatus || 'PENDIENTE'}
+          </ThemedText>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color="#cbd5e1" style={{marginTop: 10}} />
+      </View>
     </TouchableOpacity>
   );
 
@@ -105,35 +113,29 @@ export default function EstablishmentsScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
+          <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#1E838F" />
           </TouchableOpacity>
-          <ThemedText type="title" style={styles.headerTitle}>Establecimientos</ThemedText>
-          <TouchableOpacity onPress={fetchEstablecimientos} style={styles.iconButton}>
+          <ThemedText style={styles.headerTitle}>Establecimientos</ThemedText>
+          <TouchableOpacity onPress={fetchEstablecimientos}>
             <Ionicons name="refresh" size={24} color="#1E838F" />
           </TouchableOpacity>
         </View>
 
-        {/* Barra de Búsqueda */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#94a3b8" style={styles.searchIcon} />
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color="#94a3b8" />
           <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar establecimiento o expediente..."
+            style={styles.input}
+            placeholder="Buscar por nombre o expediente..."
             value={search}
-            onChangeText={(text) => handleSearch(text)}
+            onChangeText={handleSearch}
             placeholderTextColor="#94a3b8"
           />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => handleSearch('')}>
-              <Ionicons name="close-circle" size={20} color="#94a3b8" />
-            </TouchableOpacity>
-          )}
         </View>
       </View>
 
       {loading ? (
-        <View style={styles.center}>
+        <View style={styles.loader}>
           <ActivityIndicator size="large" color="#1E838F" />
         </View>
       ) : (
@@ -141,12 +143,8 @@ export default function EstablishmentsScreen() {
           data={filteredData}
           keyExtractor={(item) => item.id_establecimiento}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <ThemedText style={styles.emptyText}>
-              {search ? 'No se encontraron coincidencias.' : 'No hay datos disponibles.'}
-            </ThemedText>
-          }
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={<ThemedText style={styles.empty}>No hay resultados</ThemedText>}
         />
       )}
     </ThemedView>
@@ -154,54 +152,67 @@ export default function EstablishmentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
-  header: {
-    paddingTop: 60,
-    paddingBottom: 15,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+  container: { flex: 1, backgroundColor: '#F1F5F9' },
+  header: { 
+    paddingTop: 50, 
+    paddingHorizontal: 20, 
+    paddingBottom: 20, 
+    backgroundColor: '#FFF',
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
+    elevation: 5
   },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-  },
-  headerTitle: { fontSize: 20, color: '#1E838F' },
-  iconButton: { padding: 4 },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f1f5f9',
-    borderRadius: 12,
-    paddingHorizontal: 12,
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#0F172A' },
+  searchBar: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#F8FAFC', 
+    paddingHorizontal: 15, 
+    borderRadius: 15, 
     height: 45,
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
   },
-  searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, fontSize: 14, color: '#1e293b' },
-  listContent: { padding: 16 },
+  input: { flex: 1, marginLeft: 10, fontSize: 14 },
+  list: { padding: 15 },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
     flexDirection: 'row',
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 15,
+    marginBottom: 15,
     alignItems: 'center',
+    justifyContent: 'space-between', // Fuerza la separación entre texto y botón
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
   },
-  cardInfo: { flex: 1 },
-  title: { fontSize: 15, color: '#1e293b' },
-  subtitle: { fontSize: 13, color: '#1E838F', fontWeight: '600', marginBottom: 4 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  details: { fontSize: 12, color: '#64748b', marginLeft: 6 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginLeft: 10 },
-  statusText: { fontSize: 10, fontWeight: 'bold' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { textAlign: 'center', marginTop: 40, color: '#64748b' }
+  textContainer: {
+    flex: 1, // Esto es lo que evita que el texto se desborde
+    paddingRight: 10,
+  },
+  sideContainer: {
+    width: 100, // Ancho fijo para el área del badge
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: { 
+    fontSize: 15, 
+    fontWeight: '800', 
+    color: '#1E293B', 
+    lineHeight: 20,
+    textTransform: 'uppercase'
+  },
+  giroText: { fontSize: 11, color: '#1E838F', fontWeight: 'bold', marginVertical: 4 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  metaText: { fontSize: 12, color: '#64748B', marginLeft: 5, flex: 1 },
+  badge: { 
+    paddingVertical: 5, 
+    paddingHorizontal: 8, 
+    borderRadius: 10, 
+    width: '100%',
+    alignItems: 'center'
+  },
+  badgeText: { fontSize: 9, fontWeight: '900', textAlign: 'center' },
+  loader: { flex: 1, justifyContent: 'center' },
+  empty: { textAlign: 'center', marginTop: 50, color: '#94A3B8' }
 });

@@ -13,18 +13,17 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    username: '',
-    firstName: '',
-    lastName: '',
-    password: '',
-    confirmPassword: ''
+    username: "",
+    nombres: "",
+    apellidos: "",
+    password: "",
+    confirmPassword: "",
   });
 
   async function handleRegister() {
-    const { username, firstName, lastName, password, confirmPassword } = formData;
+    const { username, nombres, apellidos, password, confirmPassword } = formData;
 
-    // 1. Validaciones básicas
-    if (!username || !firstName || !lastName || !password) {
+    if (!username || !nombres || !apellidos || !password) {
       Alert.alert("Campos vacíos", "Por favor rellena todos los datos.");
       return;
     }
@@ -34,57 +33,45 @@ export default function RegisterScreen() {
       return;
     }
 
-    // Validación extra: Que el usuario no tenga espacios (para evitar errores de formato de email)
-    if (username.includes(' ')) {
-      Alert.alert("Nombre de usuario", "El nombre de usuario no puede contener espacios.");
-      return;
-    }
+    setLoading(true); 
 
-    setLoading(true);
+    try {
+      // Identificador interno para Supabase Auth
+      const fakeEmail = `${username.toLowerCase().trim()}@pcyb-izucar.com`;
+      
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: fakeEmail,
+        password: password,
+      });
 
-    // 2. Crear el correo sintético basado en el username
-    // CAMBIA EL DOMINIO AQUÍ:
-    const fakeEmail = `${username.toLowerCase().trim()}@gmail.com`; 
+      if (authError) throw authError;
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: fakeEmail,
-      password: password,
-      options: {
-        data: {
-          username: username,
-          first_name: firstName,
-          last_name: lastName,
-        }
+      if (authData.user) {
+        // Inserción en la tabla 'Usuarios'
+        const { error: profileError } = await supabase
+          .from('usuarios') 
+          .insert([
+            {
+              //id_usuario: authData.user.id,
+              id_usuario: Math.floor(Math.random() * 10000),        
+              nombre_usuario: username.trim(),    
+              nombre: nombres.trim(),             
+              apellido_paterno: apellidos.trim(), 
+              apellido_materno: "VACÍO",          
+              contrasena: password,               
+            }
+          ]);
+
+        if (profileError) throw profileError;
+
+        Alert.alert("¡Éxito!", "Cuenta creada exitosamente.");
+        router.replace('/logeo'); 
       }
-    });
-
-    if (authError) {
-      Alert.alert("Error de Registro", authError.message);
+    } catch (error: any) {
+      Alert.alert("Error de Registro", error.message || "Ocurrió un error inesperado.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (authData.user) {
-      // 3. Insertar en tu tabla personalizada de 'perfiles'
-      const { error: profileError } = await supabase
-        .from('perfiles')
-        .insert([
-          {
-            id: authData.user.id,
-            username: username,
-            first_name: firstName,
-            last_name: lastName,
-          }
-        ]);
-
-      if (profileError) {
-        Alert.alert("Error de Perfil", "Cuenta creada, pero hubo un error al guardar nombres: " + profileError.message);
-      } else {
-        Alert.alert("¡Bienvenido!", "Cuenta creada exitosamente.");
-        router.replace('/menu'); // O la ruta que prefieras
-      }
-    }
-    setLoading(false);
   }
 
   return (
@@ -103,69 +90,40 @@ export default function RegisterScreen() {
                 <ThemedText style={styles.label}>Nombre de Usuario</ThemedText>
                 <TextInput
                   style={styles.input}
-                  placeholder="Ej. luis_izucar"
+                  placeholder="Ej. oscar08"
                   placeholderTextColor="#94a3b8"
                   autoCapitalize="none"
-                  autoCorrect={false}
+                  value={formData.username}
                   onChangeText={(text) => setFormData({...formData, username: text})}
                 />
               </View>
 
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Nombres</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="luis"
-                  placeholderTextColor="#94a3b8"
-                  onChangeText={(text) => setFormData({...formData, firstName: text})}
-                />
+                <TextInput style={styles.input} placeholder="Nombres" value={formData.nombres} onChangeText={(text) => setFormData({...formData, nombres: text})} />
               </View>
 
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Apellidos</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Pérez"
-                  placeholderTextColor="#94a3b8"
-                  onChangeText={(text) => setFormData({...formData, lastName: text})}
-                />
+                <TextInput style={styles.input} placeholder="Apellidos" value={formData.apellidos} onChangeText={(text) => setFormData({...formData, apellidos: text})} />
               </View>
 
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Contraseña</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor="#94a3b8"
-                  secureTextEntry
-                  onChangeText={(text) => setFormData({...formData, password: text})}
-                />
+                <TextInput style={styles.input} placeholder="••••••••" secureTextEntry value={formData.password} onChangeText={(text) => setFormData({...formData, password: text})} />
               </View>
 
               <View style={styles.inputGroup}>
                 <ThemedText style={styles.label}>Confirmar Contraseña</ThemedText>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor="#94a3b8"
-                  secureTextEntry
-                  onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
-                />
+                <TextInput style={styles.input} placeholder="••••••••" secureTextEntry value={formData.confirmPassword} onChangeText={(text) => setFormData({...formData, confirmPassword: text})} />
               </View>
 
-              <TouchableOpacity 
-                style={[styles.registerButton, loading && { opacity: 0.7 }]}
-                onPress={handleRegister}
-                disabled={loading}
-              >
+              <TouchableOpacity style={[styles.registerButton, loading && { opacity: 0.7 }]} onPress={handleRegister} disabled={loading}>
                 {loading ? <ActivityIndicator color="#FFF" /> : <ThemedText style={styles.buttonText}>Registrarse</ThemedText>}
               </TouchableOpacity>
             </View>
-
             <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
-              <ThemedText style={styles.backText}>
-                ¿Ya tienes cuenta? <ThemedText style={styles.backTextBold}>Inicia sesión</ThemedText>
-              </ThemedText>
+              <ThemedText style={styles.backText}>¿Ya tienes cuenta? <ThemedText style={styles.backTextBold}>Inicia sesión</ThemedText></ThemedText>
             </TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -176,18 +134,18 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   gradientBackground: { flex: 1 },
-  scrollContainer: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 50, paddingBottom: 40, justifyContent: 'center' },
+  scrollContainer: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 40, justifyContent: 'center' },
   card: { backgroundColor: '#FFFFFF', borderRadius: 30, padding: 28, elevation: 12 },
   cardHeader: { alignItems: 'center', marginBottom: 25 },
   miniLogo: { width: 90, height: 90, marginBottom: 12 },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1E838F', textAlign: 'center' },
-  headerSubtitle: { fontSize: 14, color: '#64748b', marginTop: 4, textAlign: 'center' },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1E838F' },
+  headerSubtitle: { fontSize: 14, color: '#64748b', marginTop: 4 },
   inputGroup: { marginBottom: 18 },
-  label: { fontSize: 14, fontWeight: '700', color: '#475569', marginBottom: 8, marginLeft: 4 },
-  input: { backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 15, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: '#1e293b' },
+  label: { fontSize: 14, fontWeight: '700', color: '#475569', marginBottom: 8 },
+  input: { backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 15, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16 },
   registerButton: { backgroundColor: '#1E838F', paddingVertical: 18, borderRadius: 15, alignItems: 'center', marginTop: 15 },
   buttonText: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
   backLink: { marginTop: 25, alignItems: 'center' },
   backText: { color: '#FFFFFF', fontSize: 16 },
-  backTextBold: { fontWeight: 'bold', textDecorationLine: 'underline' },
+  backTextBold: { fontWeight: 'bold', textDecorationLine: 'underline' }
 });

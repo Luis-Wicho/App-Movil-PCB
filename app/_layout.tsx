@@ -9,13 +9,12 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
-// Configuración corregida para evitar el error de TypeScript
+// Configuración de notificaciones ajustada
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true, // Se mantiene por compatibilidad
+    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
-    // Añadimos estas dos para cumplir con el nuevo tipo 'NotificationBehavior'
     shouldShowBanner: true,
     shouldShowList: true,
   }),
@@ -25,30 +24,34 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   useEffect(() => {
+    // Solo intentamos registrar si no estamos en Expo Go o si tenemos el ID
     registerForPushNotificationsAsync();
   }, []);
 
   async function registerForPushNotificationsAsync() {
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      
-      if (finalStatus !== 'granted') {
-        console.log('Fallo al obtener el token');
-        return;
-      }
-      
-      try {
-        const token = (await Notifications.getExpoPushTokenAsync()).data;
-        console.log("Token para REQM12:", token);
-      } catch (e) {
-        console.log("Error de token:", e);
-      }
+    if (!Device.isDevice) return;
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    
+    if (finalStatus !== 'granted') return;
+    
+    try {
+      // Intentamos obtener el token de forma segura
+      // NOTA: En Expo Go SDK 53+ esto siempre fallará para notificaciones remotas
+      const token = (await Notifications.getExpoPushTokenAsync({
+        // Si tienes un projectId en app.json, ponlo aquí para quitar el error
+        // projectId: "tu-id-de-eas" 
+      })).data;
+      console.log("Token:", token);
+    } catch (e) {
+      // Silenciamos el error en consola para que no te bloquee la pantalla
+      console.warn("Notificaciones no disponibles en este entorno (Expo Go).");
     }
 
     if (Platform.OS === 'android') {
@@ -66,60 +69,12 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" /> 
         <Stack.Screen name="logeo" />
+        {/* Cambiamos el nombre para que coincida con la carpeta real (Notifications con N mayúscula) */}
         <Stack.Screen name="menu" />
         <Stack.Screen name="(modules)/Fee/index" />
-        <Stack.Screen name="(modules)/notifications/index" />
+        <Stack.Screen name="(modules)/Notifications/index" /> 
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
   );
 }
-
-/*import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, useRouter, useSegments } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { supabase } from '@/lib/supabase'; // Tu conexión
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    // Escuchamos cualquier cambio en la sesión (Login, Logout, etc.)
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      
-      // Revisamos si estamos en las pantallas de "afuera" (Login/Registro/Bienvenida)
-      const inAuthGroup = segments[0] === 'logeo' || segments[0] === 'explore' || segments[0] === 'index';
-
-      if (!session && !inAuthGroup) {
-        // Si NO hay sesión y el usuario intenta entrar a algo privado (como menu)
-        router.replace('/logeo');
-      } else if (session && inAuthGroup) {
-        // Si SÍ hay sesión y el usuario está en el login, lo mandamos directo al menú
-        router.replace('/menu');
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [segments]);
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" /> 
-        <Stack.Screen name="logeo" />
-        <Stack.Screen name="explore" /> 
-        <Stack.Screen name="menu" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Aviso' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
-}*/
